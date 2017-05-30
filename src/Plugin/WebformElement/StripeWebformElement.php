@@ -48,6 +48,9 @@ class StripeWebformElement extends WebformElementBase {
         '#type' => 'textfield',
         '#title' => $this->t(ucfirst(str_replace('_', ' ', $key))),
       ];
+      if (in_array($key, ['name', 'first_name', 'last_name'])) {
+        $form['stripe']['stripe_selectors_' . $key]['#description'] = $this->t('You can use either a first and last name, or a full name. Stripe expects a full name so it will be combined on JS.');
+      }
     }
 
     return $form;
