@@ -26,7 +26,7 @@ use Psr\Log\LoggerInterface;
  *   submission = \Drupal\webform\WebformHandlerInterface::SUBMISSION_OPTIONAL,
  * )
  */
-class StripeCharge extends WebformHandlerBase {
+class StripeWebformHandler extends WebformHandlerBase {
 
   /**
    * The token manager.

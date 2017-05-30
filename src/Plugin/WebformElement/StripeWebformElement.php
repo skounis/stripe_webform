@@ -16,7 +16,7 @@ use Drupal\webform\WebformSubmissionInterface;
  *   description = @Translation("Provides a placeholder for a stripe elements integration."),
  * )
  */
-class Stripe extends WebformElementBase {
+class StripeWebformElement extends WebformElementBase {
 
   /**
    * {@inheritdoc}
