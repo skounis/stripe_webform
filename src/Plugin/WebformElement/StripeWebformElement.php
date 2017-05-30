@@ -11,7 +11,7 @@ use Drupal\webform\WebformSubmissionInterface;
  *
  * @WebformElement(
  *   id = "stripe",
- *   label = @Translation("Stripe element"),
+ *   label = @Translation("Stripe"),
  *   category = @Translation("Stripe"),
  *   description = @Translation("Provides a placeholder for a stripe elements integration."),
  * )

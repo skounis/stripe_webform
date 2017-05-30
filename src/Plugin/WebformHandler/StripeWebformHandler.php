@@ -18,7 +18,7 @@ use Psr\Log\LoggerInterface;
  *
  * @WebformHandler(
  *   id = "stripe",
- *   label = @Translation("Stripe charge"),
+ *   label = @Translation("Stripe"),
  *   category = @Translation("Stripe"),
  *   description = @Translation("Create a customer and charge the card."),
  *   cardinality = \Drupal\webform\WebformHandlerInterface::CARDINALITY_SINGLE,
