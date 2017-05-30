@@ -214,7 +214,7 @@ class StripeCharge extends WebformHandlerBase {
       }
     }
     catch (\Stripe\Error\Base $e) {
-      drupal_set_message($e->getMessage(), 'error');
+      drupal_set_message($this->t('Stripe error: %error', ['%error' => $e->getMessage()]), 'error');
     }
  }
 
