@@ -2,8 +2,7 @@
 
 namespace Drupal\stripe_webform\EventSubscriber;
 
-
-use Drupal\stripe_webform\Event\StripeWebformEvents;
+use Drupal\stripe_webform\Event\StripeWebformWebhookEvent;
 use Drupal\stripe\Event\StripeEvents;
 use Drupal\stripe\Event\StripeWebhookEvent;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
@@ -54,9 +53,11 @@ class StripeWebformEventSubscriber implements EventSubscriberInterface {
     if ($webform_submission_id) {
       $webform_submission = $this->entity_type_manager
         ->getStorage('webform_submission')->load($webform_submission_id);
-      $webhook_event = new StripeWebformWebhookEvent($stripe_event['type'], $webform_submission, $stripe_event);
-      $this->event_dispatcher
-        ->dispatch(StripeWebformWebhookEvent::EVENT_NAME, $webhook_event);
+      if ($webform_submission) {
+        $webhook_event = new StripeWebformWebhookEvent($stripe_event['type'], $webform_submission, $stripe_event);
+        $this->event_dispatcher
+          ->dispatch(StripeWebformWebhookEvent::EVENT_NAME, $webhook_event);
+      }
     }
 
   }
