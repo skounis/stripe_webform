@@ -2,6 +2,7 @@
 
 namespace Drupal\stripe_webform\Plugin\WebformHandler;
 
+use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Serialization\Yaml;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
@@ -38,8 +39,8 @@ class StripeWebformHandler extends WebformHandlerBase {
   /**
    * {@inheritdoc}
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, LoggerInterface $logger, EntityTypeManagerInterface $entity_type_manager, WebformTokenManagerInterface $token_manager) {
-    parent::__construct($configuration, $plugin_id, $plugin_definition, $logger, $entity_type_manager);
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, LoggerInterface $logger, ConfigFactoryInterface $config_factory, EntityTypeManagerInterface $entity_type_manager, WebformTokenManagerInterface $token_manager) {
+    parent::__construct($configuration, $plugin_id, $plugin_definition, $logger, $config_factory, $entity_type_manager);
     $this->tokenManager = $token_manager;
   }
 
@@ -52,6 +53,7 @@ class StripeWebformHandler extends WebformHandlerBase {
       $plugin_id,
       $plugin_definition,
       $container->get('logger.factory')->get('webform.stripe'),
+      $container->get('config.factory'),
       $container->get('entity_type.manager'),
       $container->get('webform.token_manager')
     );
@@ -173,7 +175,8 @@ class StripeWebformHandler extends WebformHandlerBase {
    * {@inheritdoc}
    */
   public function postSave(WebformSubmissionInterface $webform_submission, $update = TRUE) {
-    $config = \Drupal::config('stripe.settings');
+    $config = $this->configFactory->get('stripe.settings');
+
     // Replace tokens.
     $data = $this->tokenManager->replace($this->configuration, $webform_submission);
 
