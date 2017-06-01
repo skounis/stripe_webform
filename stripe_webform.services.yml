@@ -1,0 +1,6 @@
+services:
+  stripe_webform_event_subscriber:
+    class: Drupal\stripe_webform\EventSubscriber\StripeWebformEventSubscriber
+    tags:
+      - {name: event_subscriber}
+    arguments: ['@event_dispatcher', '@entity_type.manager']
