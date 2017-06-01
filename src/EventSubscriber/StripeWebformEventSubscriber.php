@@ -3,7 +3,7 @@
 namespace Drupal\stripe_webform\EventSubscriber;
 
 
-use Drupal\stripe_webform\Event\StripeWebformWebhookEvent;
+use Drupal\stripe_webform\Event\StripeWebformEvents;
 use Drupal\stripe\Event\StripeEvents;
 use Drupal\stripe\Event\StripeWebhookEvent;
 use Drupal\Core\Entity\EntityTypeManagerInterface;

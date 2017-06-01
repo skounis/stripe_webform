@@ -10,7 +10,7 @@ use Symfony\Component\EventDispatcher\Event;
  */
 class StripeWebformWebhookEvent extends Event {
 
-  const EVENT_NAME = StripeWebformWebhookEvents::WEBHOOK;
+  const EVENT_NAME = StripeWebformEvents::WEBHOOK;
 
   /**
    * The webhook type
