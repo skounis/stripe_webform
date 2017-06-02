@@ -144,7 +144,7 @@ class StripeWebformHandler extends WebformHandlerBase {
     $form['metadata'] = [
       '#type' => 'details',
       '#title' => $this->t('Meta data'),
-      '#description' => $this->t('Additional metadata in YAML format, each line a key:value element. You may use tokens.'),
+      '#description' => $this->t('Additional metadata in YAML format, each line a <em>key: value</em> element. You may use tokens.'),
     ];
 
     $form['metadata']['metadata'] = [
@@ -191,6 +191,11 @@ class StripeWebformHandler extends WebformHandlerBase {
    * {@inheritdoc}
    */
   public function postSave(WebformSubmissionInterface $webform_submission, $update = TRUE) {
+    // If update do nothing
+    if ($update) {
+      return;
+    }
+
     $uuid = $this->configFactory->get('system.site')->get('uuid');
 
     $config = $this->configFactory->get('stripe.settings');
