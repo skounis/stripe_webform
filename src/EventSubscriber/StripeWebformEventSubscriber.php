@@ -5,12 +5,19 @@ namespace Drupal\stripe_webform\EventSubscriber;
 use Drupal\stripe_webform\Event\StripeWebformWebhookEvent;
 use Drupal\stripe\Event\StripeEvents;
 use Drupal\stripe\Event\StripeWebhookEvent;
+use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 class StripeWebformEventSubscriber implements EventSubscriberInterface {
 
+  /**
+   * The configuration object factory.
+   *
+   * @var \Drupal\Core\Config\ConfigFactoryInterface
+   */
+  protected $config_factory;
 
   /**
    * The entity manager service.
@@ -19,6 +26,11 @@ class StripeWebformEventSubscriber implements EventSubscriberInterface {
    */
   protected $entity_type_manager;
 
+  /**
+   * The event dispatcher service.
+   *
+   * @var \Symfony\Component\EventDispatcher\EventDispatcherInterface;
+   */
   protected $event_dispatcher;
 
   /**
@@ -29,28 +41,31 @@ class StripeWebformEventSubscriber implements EventSubscriberInterface {
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    *   The entity type manager.
    */
-  public function __construct(EventDispatcherInterface $dispatcher, EntityTypeManagerInterface $entity_type_manager) {
+  public function __construct(EventDispatcherInterface $dispatcher, ConfigFactoryInterface $config_factory, EntityTypeManagerInterface $entity_type_manager) {
     $this->event_dispatcher = $dispatcher;
     $this->entity_type_manager = $entity_type_manager;
+    $this->config_factory = $config_factory;
   }
 
   public function handle(StripeWebhookEvent $event) {
+    $uuid = $this->config_factory->get('system.site')->get('uuid');
     $stripe_event = $event->getEvent();
-    $webform_submission_id = null;
 
     if (isset($stripe_event['data']['object']['metadata']['webform_submission_id'])) {
-      $webform_submission_id = $stripe_event['data']['object']['metadata']['webform_submission_id'];
+      $metadata = $stripe_event['data']['object']['metadata'];
     }
     elseif (isset($stripe_event['data']['object']['customer'])) {
       $customer = $stripe_event['data']['object']['customer'];
       $customer = \Stripe\Customer::retrieve($customer);
 
       if (isset($customer['metadata']['webform_submission_id'])) {
-        $webform_submission_id = $customer['metadata']['webform_submission_id'];
+        $metadata = $customer['metadata'];
       }
     }
 
-    if ($webform_submission_id) {
+    if (!empty($metadata) && !empty($metadata['uuid']) && $metadata['uuid'] == $uuid) {
+      $webform_submission_id = $metadata['webform_submission_id'];
+
       $webform_submission = $this->entity_type_manager
         ->getStorage('webform_submission')->load($webform_submission_id);
       if ($webform_submission) {

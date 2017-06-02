@@ -70,6 +70,7 @@ class StripeWebformHandler extends WebformHandlerBase {
       'currency' => 'usd',
       'description' => '',
       'email' => '',
+      'metadata' => '',
     ];
   }
 
@@ -139,6 +140,21 @@ class StripeWebformHandler extends WebformHandlerBase {
       '#default_value' => $this->configuration['description'],
     ];
 
+
+    $form['metadata'] = [
+      '#type' => 'details',
+      '#title' => $this->t('Meta data'),
+      '#description' => $this->t('Additional metadata in YAML format, each line a key:value element. You may use tokens.'),
+    ];
+
+    $form['metadata']['metadata'] = [
+      '#type' => 'webform_codemirror',
+      '#mode' => 'yaml',
+      '#title' => $this->t('Meta data'),
+      '#parents' => ['settings', 'metadata'],
+      '#default_value' => $this->configuration['metadata'],
+    ];
+
     $form['advanced'] = [
       '#type' => 'details',
       '#title' => t('Advanced settings'),
@@ -175,6 +191,8 @@ class StripeWebformHandler extends WebformHandlerBase {
    * {@inheritdoc}
    */
   public function postSave(WebformSubmissionInterface $webform_submission, $update = TRUE) {
+    $uuid = $this->configFactory->get('system.site')->get('uuid');
+
     $config = $this->configFactory->get('stripe.settings');
 
     // Replace tokens.
@@ -183,11 +201,14 @@ class StripeWebformHandler extends WebformHandlerBase {
     try {
       \Stripe\Stripe::setApiKey($config->get('apikey.' . $config->get('environment') . '.secret'));
 
-      $metadata =[
+      $metadata = [
+        'uuid' => $uuid,
         'webform' => $webform_submission->getWebform()->label(),
         'webform_id' => $webform_submission->getWebform()->id(),
         'webform_submission_id' => $webform_submission->id(),
       ];
+
+      $metadata += Yaml::decode($data['metadata']);
 
        // Create a Customer:
       $customer = \Stripe\Customer::create([
