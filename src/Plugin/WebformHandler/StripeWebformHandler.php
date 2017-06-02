@@ -92,7 +92,7 @@ class StripeWebformHandler extends WebformHandlerBase {
       '#title' => $this->t('Stripe element'),
       '#required' => TRUE,
       '#options' => ['' => $this->t('-Select-')] + $options,
-      '#default_value' => $this->configuration['stripe_element'] ?: count($options) == 1 ? $key : '',
+      '#default_value' => $this->configuration['stripe_element'] ?: (count($options) == 1 ? $key : ''),
     ];
 
     $form['amount'] = [
