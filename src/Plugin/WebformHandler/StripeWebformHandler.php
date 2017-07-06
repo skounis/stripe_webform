@@ -7,7 +7,7 @@ use Drupal\Core\Serialization\Yaml;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\webform\Utility\WebformYaml;
-use Drupal\webform\WebformHandlerBase;
+use Drupal\webform\Plugin\WebformHandlerBase;
 use Drupal\webform\WebformSubmissionInterface;
 use Drupal\webform\WebformInterface;
 use Drupal\webform\WebformTokenManagerInterface;
@@ -22,9 +22,9 @@ use Psr\Log\LoggerInterface;
  *   label = @Translation("Stripe"),
  *   category = @Translation("Stripe"),
  *   description = @Translation("Create a customer and charge the card."),
- *   cardinality = \Drupal\webform\WebformHandlerInterface::CARDINALITY_SINGLE,
- *   results = \Drupal\webform\WebformHandlerInterface::RESULTS_PROCESSED,
- *   submission = \Drupal\webform\WebformHandlerInterface::SUBMISSION_OPTIONAL,
+ *   cardinality = \Drupal\webform\Plugin\WebformHandlerInterface::CARDINALITY_SINGLE,
+ *   results = \Drupal\webform\Plugin\WebformHandlerInterface::RESULTS_PROCESSED,
+ *   submission = \Drupal\webform\Plugin\WebformHandlerInterface::SUBMISSION_OPTIONAL,
  * )
  */
 class StripeWebformHandler extends WebformHandlerBase {
