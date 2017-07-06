@@ -3,7 +3,7 @@
 namespace Drupal\stripe_webform\Plugin\WebformElement;
 
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\webform\WebformElementBase;
+use Drupal\webform\Plugin\WebformElementBase;
 use Drupal\webform\WebformSubmissionInterface;
 
 /**
@@ -60,7 +60,7 @@ class StripeWebformElement extends WebformElementBase {
   /**
    * {@inheritdoc}
    */
-  public function prepare(array &$element, WebformSubmissionInterface $webform_submission) {
+  public function prepare(array &$element, WebformSubmissionInterface $webform_submission = NULL) {
     parent::prepare($element, $webform_submission);
     $info = $this->getInfo();
     foreach ($info['#stripe_selectors'] as $key => $value) {
