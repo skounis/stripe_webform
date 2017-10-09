@@ -3,16 +3,16 @@
 namespace Drupal\stripe_webform\Plugin\WebformHandler;
 
 use Drupal\Core\Config\ConfigFactoryInterface;
-use Drupal\Core\Serialization\Yaml;
-use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Logger\LoggerChannelFactoryInterface;
+use Drupal\Core\Serialization\Yaml;
 use Drupal\webform\Utility\WebformYaml;
 use Drupal\webform\Plugin\WebformHandlerBase;
 use Drupal\webform\WebformSubmissionInterface;
-use Drupal\webform\WebformInterface;
 use Drupal\webform\WebformTokenManagerInterface;
+use Drupal\webform\WebformSubmissionConditionsValidatorInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Psr\Log\LoggerInterface;
 
 /**
  * Webform submission debug handler.
@@ -39,8 +39,8 @@ class StripeWebformHandler extends WebformHandlerBase {
   /**
    * {@inheritdoc}
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, LoggerInterface $logger, ConfigFactoryInterface $config_factory, EntityTypeManagerInterface $entity_type_manager, WebformTokenManagerInterface $token_manager) {
-    parent::__construct($configuration, $plugin_id, $plugin_definition, $logger, $config_factory, $entity_type_manager);
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, LoggerChannelFactoryInterface $logger, ConfigFactoryInterface $config_factory, EntityTypeManagerInterface $entity_type_manager, WebformSubmissionConditionsValidatorInterface $conditions_validator, WebformTokenManagerInterface $token_manager) {
+    parent::__construct($configuration, $plugin_id, $plugin_definition, $logger, $config_factory, $entity_type_manager, $conditions_validator);
     $this->tokenManager = $token_manager;
   }
 
@@ -52,9 +52,10 @@ class StripeWebformHandler extends WebformHandlerBase {
       $configuration,
       $plugin_id,
       $plugin_definition,
-      $container->get('logger.factory')->get('webform.stripe'),
+      $container->get('logger.factory'),
       $container->get('config.factory'),
       $container->get('entity_type.manager'),
+      $container->get('webform_submission.conditions_validator'),
       $container->get('webform.token_manager')
     );
   }
@@ -213,13 +214,15 @@ class StripeWebformHandler extends WebformHandlerBase {
         'webform_submission_id' => $webform_submission->id(),
       ];
 
-      $metadata += Yaml::decode($data['metadata']);
+      if (!empty($data['metadata'])) {
+        $metadata += Yaml::decode($data['metadata']);
+      }
 
        // Create a Customer:
       $customer = \Stripe\Customer::create([
         'email' => $data['email'] ?: '',
         'description' => $data['description'] ?: '',
-        'source' => $webform_submission->getData($data['stripe_element']),
+        'source' => $webform_submission->getElementData($data['stripe_element']),
         'metadata' => $metadata,
       ]);
 
