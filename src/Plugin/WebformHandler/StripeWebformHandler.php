@@ -72,6 +72,9 @@ class StripeWebformHandler extends WebformHandlerBase {
       'description' => '',
       'email' => '',
       'metadata' => '',
+      'stripe_customer_create' => '',
+      'stripe_charge_create' => '',
+      'stripe_subscription_create' => '',
     ];
   }
 
@@ -82,41 +85,49 @@ class StripeWebformHandler extends WebformHandlerBase {
     $webform = $this->getWebform();
 
     $elements = $webform->getElementsInitializedFlattenedAndHasValue('view');
+    $options = [];
     foreach ($elements as $key => $element) {
       if ($element['#type'] == 'stripe') {
         $options[$key] = $element['#admin_title'] ?: $element['#title'] ?: $key;
       }
     }
 
-    $form['stripe_element'] = [
+    $form['stripe'] = [
+      '#type' => 'fieldset',
+      '#title' => $this->t('Stripe settings'),
+    ];
+
+    $form['stripe']['stripe_element'] = [
       '#type' => 'select',
       '#title' => $this->t('Stripe element'),
       '#required' => TRUE,
       '#options' => ['' => $this->t('-Select-')] + $options,
+      '#parents' => ['settings', 'stripe_element'],
       '#default_value' => $this->configuration['stripe_element'] ?: (count($options) == 1 ? $key : ''),
     ];
 
-    $form['amount'] = [
+    $form['stripe']['amount'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Amount'),
       '#default_value' => $this->configuration['amount'],
+      '#parents' => ['settings', 'amount'],
       '#description' => $this->t('Amount to charge the credit card. You may use tokens.'),
       '#required' => TRUE,
     ];
 
-    $form['plan'] = [
+    $form['stripe']['plan'] = [
       '#type' => 'details',
       '#title' => t('Subscriptions'),
       '#description' => $this->t('Optional fields to subscribe the customer to a plan instead of a directly charging it.'),
     ];
-    $form['plan']['plan_id'] = [
+    $form['stripe']['plan']['plan_id'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Plan'),
       '#default_value' => $this->configuration['plan_id'],
       '#parents' => ['settings', 'plan_id'],
       '#description' => $this->t('Stripe subscriptions plan id. You may use tokens.'),
     ];
-    $form['plan']['quantity'] = [
+    $form['stripe']['plan']['quantity'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Quantity'),
       '#default_value' => $this->configuration['quantity'],
@@ -124,17 +135,17 @@ class StripeWebformHandler extends WebformHandlerBase {
       '#description' => $this->t('Quantity of the plan to subscribe. You may use tokens.'),
     ];
 
-    $form['customer'] = [
+    $form['stripe']['customer'] = [
       '#type' => 'details',
       '#title' => t('Customer information'),
     ];
-    $form['customer']['email'] = [
+    $form['stripe']['customer']['email'] = [
       '#type' => 'textfield',
       '#title' => t('E-mail'),
       '#parents' => ['settings', 'email'],
       '#default_value' => $this->configuration['email'],
     ];
-    $form['customer']['description'] = [
+    $form['stripe']['customer']['description'] = [
       '#type' => 'textfield',
       '#title' => t('Description'),
       '#parents' => ['settings', 'description'],
@@ -142,13 +153,13 @@ class StripeWebformHandler extends WebformHandlerBase {
     ];
 
 
-    $form['metadata'] = [
+    $form['stripe']['metadata_details'] = [
       '#type' => 'details',
       '#title' => $this->t('Meta data'),
-      '#description' => $this->t('Additional metadata in YAML format, each line a <em>key: value</em> element. You may use tokens.'),
+      '#description' => $this->t('Additional <a href=":url" target="_blank">metadata</a> in YAML format, each line a <em>key: value</em> element. You may use tokens.', [':url' => 'https://stripe.com/docs/api#metadata']),
     ];
 
-    $form['metadata']['metadata'] = [
+    $form['stripe']['metadata_details']['metadata'] = [
       '#type' => 'webform_codemirror',
       '#mode' => 'yaml',
       '#title' => $this->t('Meta data'),
@@ -156,21 +167,45 @@ class StripeWebformHandler extends WebformHandlerBase {
       '#default_value' => $this->configuration['metadata'],
     ];
 
-    $form['advanced'] = [
+    $form['stripe']['advanced'] = [
       '#type' => 'details',
       '#title' => t('Advanced settings'),
       '#open' => FALSE,
     ];
-    $form['advanced']['currency'] = [
+    $form['stripe']['advanced']['currency'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Currency'),
       '#default_value' => $this->configuration['currency'],
-      '#description' => $this->t('Currency to charge the credit card. You may use tokens. <a href=":uri">Supported currencies.</a>', [':uri' => 'https://stripe.com/docs/currencies']),
+      '#description' => $this->t('Currency to charge the credit card. You may use tokens. <a href=":uri">Supported currencies</a>.', [':uri' => 'https://stripe.com/docs/currencies']),
       '#parents' => ['settings', 'currency'],
       '#required' => TRUE,
     ];
+    $form['stripe']['advanced']['stripe_customer_create'] = [
+      '#type' => 'webform_codemirror',
+      '#mode' => 'yaml',
+      '#title' => $this->t('Customer create object'),
+      '#parents' => ['settings', 'stripe_customer_create'],
+      '#default_value' => $this->configuration['stripe_customer_create'],
+      '#description' => $this->t('Additional fields of the stripe API call to <a href=":url" target="_blank">create a customer</a>. You cannot override the keys set by the fields above.', [':url' => 'https://stripe.com/docs/api#create_customer']),
+    ];
+    $form['stripe']['advanced']['stripe_charge_create'] = [
+      '#type' => 'webform_codemirror',
+      '#mode' => 'yaml',
+      '#title' => $this->t('Charge create object'),
+      '#parents' => ['settings', 'stripe_charge_create'],
+      '#default_value' => $this->configuration['stripe_charge_create'],
+      '#description' => $this->t('Additional fields of the stripe API call to <a href=":url" target="_blank">create a charge</a>. You cannot override the keys set by the fields above.', [':url' => 'https://stripe.com/docs/api#create_charge']),
+    ];
+    $form['stripe']['advanced']['stripe_subscription_create'] = [
+      '#type' => 'webform_codemirror',
+      '#mode' => 'yaml',
+      '#title' => $this->t('Subscription create object'),
+      '#parents' => ['settings', 'stripe_subscription_create'],
+      '#default_value' => $this->configuration['stripe_subscription_create'],
+      '#description' => $this->t('Additional fields of the stripe API call to <a href=":url" target="_blank">create a subscription</a>. You cannot override the keys set by the fields above.', [':url' => 'https://stripe.com/docs/api#create_subscription']),
+    ];
 
-    $form['token_tree_link'] = $this->tokenManager->buildTreeLink();
+    $form['stripe']['token_tree_link'] = $this->tokenManager->buildTreeLink();
 
     return $form;
   }
@@ -219,29 +254,42 @@ class StripeWebformHandler extends WebformHandlerBase {
       }
 
        // Create a Customer:
-      $customer = \Stripe\Customer::create([
+      $stripe_customer_create = [
         'email' => $data['email'] ?: '',
         'description' => $data['description'] ?: '',
         'source' => $webform_submission->getElementData($data['stripe_element']),
         'metadata' => $metadata,
-      ]);
+      ];
+      if (!empty($data['stripe_customer_create'])) {
+        $stripe_customer_create += Yaml::decode($data['stripe_customer_create']);
+      }
+      $customer = \Stripe\Customer::create($stripe_customer_create);
 
       if (empty($data['plan_id'])) {
         // Charge the Customer instead of the card:
-        $charge = \Stripe\Charge::create([
+        $stripe_charge_create = [
           'amount' => $data['amount'] * 100,
           'currency' => $data['currency'],
           'customer' => $customer->id,
           'metadata' => $metadata,
-        ]);
+        ];
+        if (!empty($data['stripe_charge_create'])) {
+          $stripe_charge_create += Yaml::decode($data['stripe_charge_create']);
+        }
+
+        $charge = \Stripe\Charge::create($stripe_charge_create);
       }
       else {
-        \Stripe\Subscription::create([
+        $stripe_subscription_create = [
           'customer' => $customer->id,
           "plan" => $data['plan_id'],
           'quantity' => $data['quantity'] ?: 1,
           'metadata' => $metadata,
-        ]);
+        ];
+        if (!empty($data['stripe_subscription_create'])) {
+          $stripe_subscription_create += Yaml::decode($data['stripe_subscription_create']);
+        }
+        \Stripe\Subscription::create($stripe_subscription_create);
       }
     }
     catch (\Stripe\Error\Base $e) {
