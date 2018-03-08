@@ -7,6 +7,7 @@ use Drupal\stripe\Event\StripeEvents;
 use Drupal\stripe\Event\StripeWebhookEvent;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
@@ -34,6 +35,14 @@ class StripeWebformEventSubscriber implements EventSubscriberInterface {
   protected $event_dispatcher;
 
   /**
+   * The iogger interface
+   *
+   * @var \Psr\Log\LoggerInterface
+   */
+  protected $logger;
+
+
+  /**
    * Constructs a new instance.
    *
    * @param EventDispatcherInterface $dispatcher
@@ -41,25 +50,30 @@ class StripeWebformEventSubscriber implements EventSubscriberInterface {
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    *   The entity type manager.
    */
-  public function __construct(EventDispatcherInterface $dispatcher, ConfigFactoryInterface $config_factory, EntityTypeManagerInterface $entity_type_manager) {
+  public function __construct(EventDispatcherInterface $dispatcher, ConfigFactoryInterface $config_factory, EntityTypeManagerInterface $entity_type_manager, LoggerInterface $logger) {
     $this->event_dispatcher = $dispatcher;
     $this->entity_type_manager = $entity_type_manager;
     $this->config_factory = $config_factory;
+    $this->logger = $logger;
   }
 
   public function handle(StripeWebhookEvent $event) {
     $uuid = $this->config_factory->get('system.site')->get('uuid');
     $stripe_event = $event->getEvent();
 
-    if (isset($stripe_event['data']['object']['metadata']['webform_submission_id'])) {
+    if (!empty($stripe_event['data']['object']['metadata']['webform_submission_id'])) {
       $metadata = $stripe_event['data']['object']['metadata'];
     }
-    elseif (isset($stripe_event['data']['object']['customer'])) {
+    elseif (!empty($stripe_event['data']['object']['customer'])) {
       $customer = $stripe_event['data']['object']['customer'];
-      $customer = \Stripe\Customer::retrieve($customer);
+      try {
+        $customer = \Stripe\Customer::retrieve($customer);
 
-      if (isset($customer['metadata']['webform_submission_id'])) {
-        $metadata = $customer['metadata'];
+        if (isset($customer['metadata']['webform_submission_id'])) {
+          $metadata = $customer['metadata'];
+        }
+      } catch (\Stripe\Error\Base $e) {
+        $this->logger->error('Stripe API Error: ' . $e->getMessage());
       }
     }
 
