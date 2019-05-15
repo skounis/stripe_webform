@@ -39,7 +39,7 @@ class StripeWebformElement extends WebformElementBase {
     $form['stripe'] = [
       '#type' => 'fieldset',
       '#title' => $this->t('Stripe javascript selectors'),
-      '#description' => $this->t('jQuery selectors so that the value of the fields can be feed to the stripe element. i.e. %ie. The selectors are gonna be looked within the enclosing form only.', ['%ie' => ':input[name="name[first]"]']),
+      '#description' => $this->t('jQuery selectors so that the value of the fields can be used on the stripe element. i.e. %ie. The selectors are gonna be looked within the enclosing form only.', ['%ie' => ':input[name="name[first]"]']),
     ];
 
     $info = $this->getInfo();

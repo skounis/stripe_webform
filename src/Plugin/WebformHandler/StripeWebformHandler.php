@@ -15,7 +15,7 @@ use Drupal\webform\WebformSubmissionConditionsValidatorInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * Webform submission debug handler.
+ * Webform submission stripe handler.
  *
  * @WebformHandler(
  *   id = "stripe",
