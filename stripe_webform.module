@@ -1,1 +1,16 @@
 <?php
+/**
+ * @file
+ * Provides a Stripe webform handler.
+ */
+
+/**
+ * Implements hook_theme().
+ */
+function stripe_webform_theme() {
+    return [
+      'webform_handler_stripe_summary' => [
+        'variables' => ['settings' => NULL, 'handler' => []],
+      ],
+    ];
+  }
