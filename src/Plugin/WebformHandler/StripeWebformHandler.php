@@ -240,6 +240,7 @@ class StripeWebformHandler extends WebformHandlerBase {
         'webform' => $webform_submission->getWebform()->label(),
         'webform_id' => $webform_submission->getWebform()->id(),
         'webform_submission_id' => $webform_submission->id(),
+        'webform_serial_id' => $webform_submission->serial(),
       ];
 
       if (!empty($data['metadata'])) {
@@ -253,6 +254,19 @@ class StripeWebformHandler extends WebformHandlerBase {
         'source' => $webform_submission->getElementData($data['stripe_element']),
         'metadata' => $metadata,
       ];
+
+      // Do not try to charge if no source token is provided/generated. 
+      // Token is empty or invalid. Valid tokens start with `tok`
+      $valid_token_prefix = 'tok';
+      if (empty($stripe_customer_create['source']) || !str_starts_with($stripe_customer_create['source'] , $valid_token_prefix )) {
+        $message = $this->t('No charge attempt made for webform "%webform" submission: %id', 
+          [
+            '%webform' => $metadata['webform_id'],
+            '%id' => $metadata['webform_submission_id']
+          ]);
+        $this->getLogger('webform_handler_stripe')->notice($message);
+        return;
+      }
       if (!empty($data['stripe_customer_create'])) {
         $stripe_customer_create += Yaml::decode($data['stripe_customer_create']);
       }
@@ -264,6 +278,7 @@ class StripeWebformHandler extends WebformHandlerBase {
           'amount' => $data['amount'] * 100,
           'currency' => $data['currency'],
           'customer' => $customer->id,
+          'description' => $stripe_customer_create['description'],
           'metadata' => $metadata,
         ];
         if (!empty($data['stripe_charge_create'])) {
